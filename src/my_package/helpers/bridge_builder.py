@@ -2,6 +2,8 @@ import math
 
 
 class BridgeBuilder:
+    """Manage the bridge build grid, node selection, and beam creation."""
+
     def __init__(self, grid):
         self.grid = grid
         self.nodes = self._build_initial_nodes()
@@ -9,6 +11,7 @@ class BridgeBuilder:
         self.selected_node = None
 
     def _build_initial_nodes(self):
+        """Create a fixed array of grid nodes for timed build mode."""
         num_nodes_x = 9
         num_nodes_y = 8
         spacing_x = 100
@@ -31,6 +34,7 @@ class BridgeBuilder:
         return nodes
 
     def handle_click(self, pos):
+        """Select nodes and create beams between clicked node pairs."""
         clicked_node = None
 
         for node in self.nodes:
@@ -41,8 +45,10 @@ class BridgeBuilder:
 
         if clicked_node:
             if self.selected_node is None:
+                # First node click selects a start point.
                 self.selected_node = clicked_node
             else:
+                # Second click creates a beam to the previously selected node.
                 if clicked_node != self.selected_node:
                     self.beams.append((self.selected_node, clicked_node))
                 self.selected_node = None

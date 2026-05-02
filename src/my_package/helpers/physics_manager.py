@@ -3,6 +3,8 @@ import pymunk
 
 
 class PhysicsManager:
+    """Manage the physics simulation used after the build timer expires."""
+
     LEDGE_W = 200
     LEDGE_H = 550
     CIRCLE_RADIUS = 40
@@ -17,6 +19,7 @@ class PhysicsManager:
         self.initialized = False
 
     def create_ledge(self, pos):
+        """Create a static ledge at the given grid position."""
         body = pymunk.Body(body_type=pymunk.Body.STATIC)
         body.position = pos
         shape = pymunk.Poly.create_box(body, (self.LEDGE_W, self.LEDGE_H))
@@ -24,6 +27,7 @@ class PhysicsManager:
         return shape
 
     def create_ball(self, pos):
+        """Create a dynamic ball at the clicked location."""
         body = pymunk.Body(1, 100, body_type=pymunk.Body.DYNAMIC)
         body.position = pos
 
@@ -34,6 +38,7 @@ class PhysicsManager:
         return shape
 
     def initialize(self, beams):
+        """Initialize physics objects and convert bridge beams into static segments."""
         if self.initialized:
             return
 
@@ -58,14 +63,17 @@ class PhysicsManager:
             self.space.add(body, shape)
 
     def update(self):
+        """Advance the physics world forward one step."""
         if self.active and self.space is not None:
             self.space.step(1 / 60)
 
     def drop_ball(self, pos):
+        """Create a ball in the physics scene when the user clicks."""
         if self.space is not None:
             self.circles.append(self.create_ball(pos))
 
     def draw(self, screen, beams, nodes, selected_node):
+        """Render the physics scene, including ledges, balls, beams, and nodes."""
         screen.fill("white")
 
         for ledge in self.ledges:
@@ -79,7 +87,7 @@ class PhysicsManager:
             pygame.draw.rect(
                 screen,
                 "lightgreen",
-                (draw_x, draw_y, self.LEDGE_W, self.LEDGE_H)
+                (draw_x, draw_y, self.LEDGE_W, self.LEDGE_H),
             )
 
         for circle in self.circles:
