@@ -25,7 +25,7 @@ class TimedScreen:
 
         # Physics state
         self.space = None
-        self.ball_shape = None
+        self.circles = []
         self.ledges = []
         self.physics_active = False
         self.physics_initialized = False
@@ -38,14 +38,15 @@ class TimedScreen:
         self.timer_rects = []
         self.start_rect = pygame.Rect(0, 0, 120, 40)
         self.start_rect.center = (1180, 50)
+        self.back_rect = pygame.Rect(1180, 60, 100, 36)
         self._build_timer_rects()
 
     def _build_initial_nodes(self):
         num_nodes_x = 9
-        num_nodes_y = 5
+        num_nodes_y = 8
         spacing_x = 100
         spacing_y = 60
-        bottom_gap = 50
+        bottom_gap = 30
 
         total_width = (num_nodes_x - 1) * spacing_x
         start_x = (self.grid.width - total_width) // 2
@@ -106,8 +107,6 @@ class TimedScreen:
             self._create_ledge(right_ledge_pos),
         ]
 
-        self.ball_shape = self._create_ball((self.grid.width / 2, 80))
-
         for beam in self.beams:
             body = pymunk.Body(body_type=pymunk.Body.STATIC)
             shape = pymunk.Segment(body, beam[0], beam[1], 2)
@@ -127,6 +126,9 @@ class TimedScreen:
         pos = event.pos
 
         # Check if a timer option or start button was clicked
+        if self.back_rect.collidepoint(pos):
+            return "menu"
+
         if not self.timer_running:
             for idx, rect in enumerate(self.timer_rects):
                 if rect.collidepoint(pos):
@@ -155,6 +157,13 @@ class TimedScreen:
                     if clicked_node != self.selected_node:
                         self.beams.append((self.selected_node, clicked_node))
                     self.selected_node = None
+            return
+
+        # After build time ends and physics is active, drop a ball on mouse click
+        if self.physics_active and not self.timer_running and self.selected_duration and self.remaining_time == 0:
+            if self.space is None:
+                self._initialize_physics()
+            self.circles.append(self._create_ball(pos))
 
     # Update the timer based on elapsed time
     def _update_timer(self):
@@ -178,9 +187,9 @@ class TimedScreen:
             draw_y = pos_y - (self.LEDGE_H / 2)
             pygame.draw.rect(screen, "lightgreen", (draw_x, draw_y, self.LEDGE_W, self.LEDGE_H))
 
-        if self.ball_shape is not None:
-            pos_x = int(self.ball_shape.body.position.x)
-            pos_y = int(self.ball_shape.body.position.y)
+        for circle in self.circles:
+            pos_x = int(circle.body.position.x)
+            pos_y = int(circle.body.position.y)
             pygame.draw.circle(screen, "blue", (pos_x, pos_y), self.CIRCLE_RADIUS)
 
         for beam in self.beams:
@@ -196,49 +205,63 @@ class TimedScreen:
         if self.physics_active:
             self._update_physics()
             self._draw_physics_scene(screen)
+
+            back_color = (80, 80, 120)
+            pygame.draw.rect(screen, back_color, self.back_rect)
+            back_text = self.font.render("Back", True, "white")
+            screen.blit(back_text, back_text.get_rect(center=self.back_rect.center))
+
+            info_surface = self.font.render("Click to drop a ball", True, "black")
+            screen.blit(info_surface, (140, 68))
+            return
+
+        screen.fill((30, 30, 30))
+        self.grid.drawGrid(screen)
+
+        pygame.draw.rect(screen, "gray", (0, 0, screen.get_width(), 100))
+
+        title_surface = self.title_font.render("Timed Challenge", True, "white")
+        screen.blit(title_surface, (20, 10))
+
+        for idx, duration in enumerate(self.timer_options):
+            rect = self.timer_rects[idx]
+            color = (80, 160, 80) if self.selected_duration == duration else (100, 100, 100)
+            pygame.draw.rect(screen, color, rect)
+            text_surface = self.font.render(f"{duration}s", True, "white")
+            screen.blit(text_surface, text_surface.get_rect(center=rect.center))
+
+        start_color = (120, 120, 220) if self.selected_duration else (70, 70, 70)
+        pygame.draw.rect(screen, start_color, self.start_rect)
+        start_text = self.font.render("Start", True, "white")
+        screen.blit(start_text, start_text.get_rect(center=self.start_rect.center))
+
+        self._update_timer()
+
+        back_color = (80, 80, 120)
+        pygame.draw.rect(screen, back_color, self.back_rect)
+        back_text = self.font.render("Back", True, "white")
+        screen.blit(back_text, back_text.get_rect(center=self.back_rect.center))
+
+        timer_surface = self.font.render(f"Time: {self.remaining_time}s", True, "white")
+        screen.blit(timer_surface, (450, 20))
+
+        if self.timer_running:
+            status = "Building..."
+        elif self.selected_duration and self.remaining_time == 0:
+            status = "Time's up!"
         else:
-            screen.fill((30, 30, 30))
-            self.grid.drawGrid(screen)
+            status = "Select a timer then press Start"
 
-            pygame.draw.rect(screen, "gray", (0, 0, screen.get_width(), 100))
+        status_surface = self.font.render(status, True, "white")
+        screen.blit(status_surface, (450, 50))
 
-            title_surface = self.title_font.render("Timed Challenge", True, "white")
-            screen.blit(title_surface, (20, 10))
+        for beam in self.beams:
+            pygame.draw.line(screen, (255, 255, 255), beam[0], beam[1], 2)
 
-            for idx, duration in enumerate(self.timer_options):
-                rect = self.timer_rects[idx]
-                color = (80, 160, 80) if self.selected_duration == duration else (100, 100, 100)
-                pygame.draw.rect(screen, color, rect)
-                text_surface = self.font.render(f"{duration}s", True, "white")
-                screen.blit(text_surface, text_surface.get_rect(center=rect.center))
+        for node in self.nodes:
+            pygame.draw.circle(screen, (0, 200, 255), node, 6)
 
-            start_color = (120, 120, 220) if self.selected_duration else (70, 70, 70)
-            pygame.draw.rect(screen, start_color, self.start_rect)
-            start_text = self.font.render("Start", True, "white")
-            screen.blit(start_text, start_text.get_rect(center=self.start_rect.center))
-
-            self._update_timer()
-
-            timer_surface = self.font.render(f"Time: {self.remaining_time}s", True, "white")
-            screen.blit(timer_surface, (450, 20))
-
-            if self.timer_running:
-                status = "Building..."
-            elif self.selected_duration and self.remaining_time == 0:
-                status = "Time's up!"
-            else:
-                status = "Select a timer then press Start"
-
-            status_surface = self.font.render(status, True, "white")
-            screen.blit(status_surface, (450, 50))
-
-            for beam in self.beams:
-                pygame.draw.line(screen, (255, 255, 255), beam[0], beam[1], 2)
-
-            for node in self.nodes:
-                pygame.draw.circle(screen, (0, 200, 255), node, 6)
-
-            if self.selected_node is not None:
-                pygame.draw.circle(screen, (255, 255, 0), self.selected_node, 10, 2)
+        if self.selected_node is not None:
+            pygame.draw.circle(screen, (255, 255, 0), self.selected_node, 10, 2)
 
     

@@ -23,6 +23,8 @@ while running:
             current_screen = TimedScreen()
         if result == "sandbox":
             current_screen = SandboxScreen()
+        if result == "menu":
+            current_screen = MenuScreen(screen)
 
     current_screen.draw(screen)
 
