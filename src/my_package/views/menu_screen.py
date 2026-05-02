@@ -1,69 +1,64 @@
 import pygame
 
-class MenuScreen: 
+class MenuScreen:
 
-    # Fonts
-    title_font = pygame.font.SysFont(None, 64)
-    button_font = pygame.font.SysFont(None, 48)
+    def __init__(self, screen):
 
-    # Title text
-    title_surface = title_font.render("Mode Selection", True, "white")
-    title_rect = title_surface.get_rect(center=(screen.get_width() / 2, 80))
+        self.screen = screen
 
-    # Rectangle settings
-    rect_width = 300
-    rect_height = 100
-    spacing = 30
+        # Fonts
+        self.title_font = pygame.font.SysFont(None, 64)
+        self.button_font = pygame.font.SysFont(None, 48)
 
-    # First rectangle
-    rect1 = pygame.Rect(0, 0, rect_width, rect_height)
-    rect1.center = (screen.get_width() / 2, screen.get_height() / 2 - rect_height)
+        # Title
+        self.title_surface = self.title_font.render("Mode Selection", True, "white")
+        self.title_rect = self.title_surface.get_rect(
+            center=(screen.get_width() // 2, 80)
+        )
 
-    # Second rectangle
-    rect2 = pygame.Rect(0, 0, rect_width, rect_height)
-    rect2.center = (screen.get_width() / 2, rect1.bottom + spacing + rect_height / 2)
+        # Rectangle settings
+        rect_width = 300
+        rect_height = 100
+        spacing = 30
 
-    # Text for rectangles
-    text1 = button_font.render("Timed", True, "white")
-    text1_rect = text1.get_rect(center=rect1.center)
+        # First button
+        self.rect1 = pygame.Rect(0, 0, rect_width, rect_height)
+        self.rect1.center = (
+            screen.get_width() // 2,
+            screen.get_height() // 2 - rect_height
+        )
 
-    text2 = button_font.render("Sandbox", True, "white")
-    text2_rect = text2.get_rect(center=rect2.center)
+        # Second button
+        self.rect2 = pygame.Rect(0, 0, rect_width, rect_height)
+        self.rect2.center = (
+            screen.get_width() // 2,
+            self.rect1.bottom + spacing + rect_height // 2
+        )
 
-    running = True
-    dt = 0
+        # Text
+        self.text1 = self.button_font.render("Timed", True, "white")
+        self.text1_rect = self.text1.get_rect(center=self.rect1.center)
 
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+        self.text2 = self.button_font.render("Sandbox", True, "white")
+        self.text2_rect = self.text2.get_rect(center=self.rect2.center)
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_position = pygame.mouse.get_pos()
+    def handle_event(self, event):
 
-                if current_screen == "mode select":
-                    if rect1.collidepoint(mouse_position):
-                        current_screen = "Timed"
+        if event.type == pygame.MOUSEBUTTONDOWN:
 
-                    if rect2.collidepoint(mouse_position):
-                        current_screen = "Sandbox"
+            if self.rect1.collidepoint(event.pos):
+                return "timed"
 
+            if self.rect2.collidepoint(event.pos):
+                return "sandbox"
 
+    def draw(self):
 
-        screen.fill("black")
+        self.screen.fill("black")
 
-        # Draw title
-        screen.blit(title_surface, title_rect)
+        pygame.draw.rect(self.screen, "grey", self.rect1)
+        pygame.draw.rect(self.screen, "grey", self.rect2)
 
-        # Draw rectangles
-        pygame.draw.rect(screen, "grey", rect1)
-        pygame.draw.rect(screen, "grey", rect2)
-
-        # Draw text
-        screen.blit(text1, text1_rect)
-        screen.blit(text2, text2_rect)
-
-        pygame.display.flip()
-        clock.tick(60)
-
-    pygame.quit()
+        self.screen.blit(self.title_surface, self.title_rect)
+        self.screen.blit(self.text1, self.text1_rect)
+        self.screen.blit(self.text2, self.text2_rect)

@@ -1,30 +1,30 @@
 import pygame
-from views import MenuScreen
-from timed import TimedScreen
-from sandbox import SandboxScreen
+from src.my_package.views.menu_screen import MenuScreen
 
 pygame.init()
 
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 
-current_screen = MenuScreen()
+current_screen = MenuScreen(screen)
 
 running = True
 while running:
 
     for event in pygame.event.get():
+
         if event.type == pygame.QUIT:
             running = False
 
         result = current_screen.handle_event(event)
 
         if result == "timed":
-            current_screen = TimedScreen()
-        if result == "sandbox":
-            current_screen = SandboxScreen()
+            print("Load Timed Screen")
 
-    current_screen.draw(screen)
+        elif result == "sandbox":
+            print("Load Sandbox Screen")
+
+    current_screen.draw()
 
     pygame.display.flip()
     clock.tick(60)
