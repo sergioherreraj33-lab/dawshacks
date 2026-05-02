@@ -52,7 +52,7 @@ class MenuScreen:
             if self.rect2.collidepoint(event.pos):
                 return "sandbox"
 
-    def draw(self):
+    def draw(self, screen):
 
         self.screen.fill("black")
 
