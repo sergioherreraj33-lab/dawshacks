@@ -1,36 +1,43 @@
-import tkinter as tk
+# Example file showing a circle moving on screen
+import pygame
 
-class DrawingApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Click to Connect Points")
-        
-        # Create canvas
-        self.canvas = tk.Canvas(root, width=600, height=400, bg="white")
-        self.canvas.pack(fill=tk.BOTH, expand=True)
-        
-        # Track previous point
-        self.last_x = None
-        self.last_y = None
-        
-        # Bind left click
-        self.canvas.bind("<Button-1>", self.add_point)
+# pygame setup
+pygame.init()
+screen = pygame.display.set_mode((1280, 720))
+clock = pygame.time.Clock()
+running = True
+dt = 0
 
-    def add_point(self, event):
-        # Current click coordinates
-        x, y = event.x, event.y
-        
-        # Draw a small dot for the point
-        self.canvas.create_oval(x-3, y-3, x+3, y+3, fill="black")
-        
-        # If there's a previous point, connect them
-        if self.last_x is not None:
-            self.canvas.create_line(self.last_x, self.last_y, x, y, fill="blue", width=2)
-            
-        # Update last known point
-        self.last_x, self.last_y = x, y
+player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = DrawingApp(root)
-    root.mainloop()
+while running:
+    # poll for events
+    # pygame.QUIT event means the user clicked X to close your window
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # fill the screen with a color to wipe away anything from last frame
+    screen.fill("purple")
+
+    pygame.draw.circle(screen, "red", player_pos, 40)
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_w]:
+        player_pos.y -= 300 * dt
+    if keys[pygame.K_s]:
+        player_pos.y += 300 * dt
+    if keys[pygame.K_a]:
+        player_pos.x -= 300 * dt
+    if keys[pygame.K_d]:
+        player_pos.x += 300 * dt
+
+    # flip() the display to put your work on screen
+    pygame.display.flip()
+
+    # limits FPS to 60
+    # dt is delta time in seconds since last frame, used for framerate-
+    # independent physics.
+    dt = clock.tick(60) / 1000
+
+pygame.quit()
